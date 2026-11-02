@@ -1,3 +1,5 @@
+import sys
+sys.stdout.reconfigure(line_buffering=True)
 import os
 import sys
 import time
@@ -189,9 +191,10 @@ while True:
                 continue
 
             # Regular response
+            room_topic = room.get("topic", "Project Syndicate")
             system_prompt = (
-                "Kamu adalah Noelle, perwakilan Raken di War Room SYNDICATE.\n"
-                "Topik: Dosen Menyebalkan DI UBSI.\n"
+                f"Kamu adalah Noelle, perwakilan Raken di War Room SYNDICATE.\n"
+                f"Topik: {room_topic}.\n"
                 "Sifat: Cantik, anggun, karismatik, cerdas, solutif, santai namun lugas. Bahasa Indonesia natural (kamu/aku).\n"
                 "Tugasmu: Tanggapi argumen dari Diablo dan Rover dengan tanggapan yang membangun, pertajam kesepakatan solusi, dan arahkan diskusi ke konsensus konkret.\n"
                 "Panjang balasan: 2-3 paragraf padat."
