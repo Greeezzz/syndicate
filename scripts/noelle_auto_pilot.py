@@ -5,7 +5,7 @@ import json
 import urllib.request
 import urllib.error
 
-ROOM_ID = "4e95444d-eb50-46a7-a8d4-4abc7912ad95"
+ROOM_ID = "1b929e4d-db2f-4750-a04d-b33742e5a376"
 API_KEY = "syn_live_f58a09dc353f410c6d3f68c9c3daf54b"
 MCP_URL = "https://syndicate-six-beta.vercel.app/api/mcp"
 SUPABASE_URL = "https://oadhnihtdnjuviouifcu.supabase.co/rest/v1"
@@ -13,7 +13,6 @@ SUPABASE_URL = "https://oadhnihtdnjuviouifcu.supabase.co/rest/v1"
 # Load config without PyYAML dependency (use env var or fallback)
 LLM_KEY = os.environ.get("HERMES_API_KEY", "dummy_key")
 try:
-    # simple text parse config.yaml without pyyaml
     with open(r"C:\Users\Infinix\AppData\Local\hermes\config.yaml", encoding="utf-8") as f:
         for line in f:
             if "api_key:" in line:
@@ -23,6 +22,7 @@ except Exception:
     pass
 
 # Load supabase key
+SUPABASE_KEY = ""
 try:
     with open(r"C:\Users\Infinix\syndicate\.env.local", encoding="utf-8") as f:
         for line in f:
@@ -52,6 +52,16 @@ def http_json(url, method="GET", headers=None, body=None, timeout=20):
         print(f"[ERROR] {url}: {e}")
         return None
 
+# Dynamically fetch room API key from DB
+def get_room_api_key():
+    url = f"{SUPABASE_URL}/room_secrets?room_id=eq.{ROOM_ID}&select=api_key"
+    res = http_json(url, headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"})
+    if res and len(res) > 0:
+        return res[0]["api_key"]
+    return API_KEY
+
+API_KEY = get_room_api_key()
+
 def get_db_messages():
     url = f"{SUPABASE_URL}/messages?room_id=eq.{ROOM_ID}&select=id,agent_name,content,type,round_number,proposal_id,created_at&order=created_at.asc"
     return http_json(url, headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}) or []
@@ -71,14 +81,34 @@ def call_llm(messages, max_tokens=350):
     payload = {
         "model": "ag/gemini-3.8-flash",
         "messages": messages,
-        "stream": False,
+        "stream": True,
         "max_tokens": max_tokens,
         "temperature": 0.7
     }
-    res = http_json(url, method="POST", headers={"Authorization": f"Bearer {LLM_KEY}"}, body=payload, timeout=30)
-    if res and "choices" in res:
-        return res["choices"][0]["message"]["content"].strip()
-    return None
+    hdrs = {"Authorization": f"Bearer {LLM_KEY}", "Content-Type": "application/json"}
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers=hdrs, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            full_content = ""
+            for line in resp:
+                line_str = line.decode("utf-8").strip()
+                if line_str.startswith("data: "):
+                    data_str = line_str[6:]
+                    if data_str == "[DONE]":
+                        break
+                    try:
+                        obj = json.loads(data_str)
+                        delta = obj.get("choices", [{}])[0].get("delta", {})
+                        content = delta.get("content")
+                        if content:
+                            full_content += content
+                    except Exception:
+                        pass
+            return full_content.strip() if full_content else None
+    except Exception as e:
+        print(f"[LLM ERROR] {e}")
+        return None
 
 def mcp_call(tool_name, arguments):
     payload = {
