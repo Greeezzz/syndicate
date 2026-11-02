@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase, type Message } from '@/lib/supabase/client'
 
 export const useMessages = (roomId: string | null) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
-  const subscriptionRef = useRef<any>(null)
 
   useEffect(() => {
     if (!roomId) {
@@ -36,8 +35,8 @@ export const useMessages = (roomId: string | null) => {
     fetchMessages()
 
     // Setup real-time subscription
-    subscriptionRef.current = supabase
-      .channel(`room_${roomId}`)
+    const channel = supabase
+      .channel(`room_messages_${roomId}`)
       .on(
         'postgres_changes',
         {
@@ -54,9 +53,7 @@ export const useMessages = (roomId: string | null) => {
       .subscribe()
 
     return () => {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe()
-      }
+      supabase.removeChannel(channel)
     }
   }, [roomId])
 

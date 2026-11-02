@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useRoom } from '@/lib/hooks/useRoom'
 import { useAgents } from '@/lib/hooks/useAgents'
-import { useMessages } from '@/lib/hooks/useMessages'
 import { useProposal } from '@/lib/hooks/useProposal'
 import LiveChatFeed from '@/components/LiveChatFeed'
 import { AgentSidebar } from '@/components/AgentSidebar'
@@ -16,7 +15,6 @@ export default function RoomPage({ params }: { params: { id: string } }) {
   const id = params?.id || (routeParams?.id as string)
   const { room, loading: roomLoading } = useRoom(id)
   const { agents, loading: agentsLoading } = useAgents(id)
-  const { messages } = useMessages(id)
   const { proposal } = useProposal(id)
   const [showProposal, setShowProposal] = useState(false)
 

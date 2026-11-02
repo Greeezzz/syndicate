@@ -65,7 +65,7 @@ export const useProposal = (roomId: string | null) => {
       .subscribe()
 
     return () => {
-      channel.unsubscribe()
+      supabase.removeChannel(channel)
     }
   }, [roomId])
 
