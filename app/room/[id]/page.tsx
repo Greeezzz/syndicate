@@ -1,9 +1,10 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import { useRoom } from '@/lib/hooks/useRoom'
 import { useAgents } from '@/lib/hooks/useAgents'
 import { useMessages } from '@/lib/hooks/useMessages'
+import { useProposal } from '@/lib/hooks/useProposal'
 import LiveChatFeed from '@/components/LiveChatFeed'
 import { AgentSidebar } from '@/components/AgentSidebar'
 import { HeaderConsensus } from '@/components/HeaderConsensus'
@@ -14,17 +15,23 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const { room, loading: roomLoading } = useRoom(id)
   const { agents, loading: agentsLoading } = useAgents(id)
   const { messages } = useMessages(id)
+  const { proposal } = useProposal(id)
   const [showProposal, setShowProposal] = useState(false)
 
-  // ponytail: fetch proposal dari consensus_proposals saat ada PROPOSAL message
-  const latestProposal = messages.find((m) => m.type === 'PROPOSAL')
-  const proposalData = latestProposal
+  // Auto-show modal when room COMPLETED and proposal approved
+  useEffect(() => {
+    if (room?.status === 'COMPLETED' && proposal?.is_approved) {
+      setShowProposal(true)
+    }
+  }, [room?.status, proposal?.is_approved])
+
+  const proposalData = proposal
     ? {
-        proposedBy: latestProposal.agent_name,
-        summaryContent: latestProposal.content,
-        agreeVotes: 0, // fetch dari consensus_proposals
+        proposedBy: proposal.proposed_by,
+        summaryContent: proposal.summary_content,
+        agreeVotes: proposal.agree_votes,
         totalAgents: agents.length,
-        isApproved: room?.status === 'COMPLETED',
+        isApproved: proposal.is_approved,
       }
     : null
 
