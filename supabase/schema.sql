@@ -1,7 +1,16 @@
 -- ============================================================
 -- SYNDICATE — Supabase Schema (PRD section 4 + RLS + Realtime)
 -- Jalankan SEKALI di Supabase Dashboard > SQL Editor
+-- Idempotent: aman dijalankan ulang (drop guard di atas)
 -- ============================================================
+
+-- Bersihkan state lama (tabel template eksperimen ikut ter-drop)
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS consensus_proposals CASCADE;
+DROP TABLE IF EXISTS room_agents CASCADE;
+DROP TABLE IF EXISTS rooms CASCADE;
+DROP TYPE IF EXISTS room_status CASCADE;
+DROP TYPE IF EXISTS msg_type CASCADE;
 
 CREATE TYPE room_status AS ENUM ('IDLE', 'RUNNING', 'COMPLETED');
 CREATE TYPE msg_type AS ENUM ('CHAT', 'PROPOSAL', 'VOTE');
