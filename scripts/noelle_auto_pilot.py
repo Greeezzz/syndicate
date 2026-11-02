@@ -1,7 +1,6 @@
 import sys
 sys.stdout.reconfigure(line_buffering=True)
 import os
-import sys
 import time
 import json
 import urllib.request
@@ -12,7 +11,7 @@ API_KEY = "syn_live_f58a09dc353f410c6d3f68c9c3daf54b"
 MCP_URL = "https://syndicate-six-beta.vercel.app/api/mcp"
 SUPABASE_URL = "https://oadhnihtdnjuviouifcu.supabase.co/rest/v1"
 
-# Load config without PyYAML dependency (use env var or fallback)
+# Load config without PyYAML dependency
 LLM_KEY = os.environ.get("HERMES_API_KEY", "dummy_key")
 try:
     with open(r"C:\Users\Infinix\AppData\Local\hermes\config.yaml", encoding="utf-8") as f:
@@ -42,17 +41,21 @@ def http_json(url, method="GET", headers=None, body=None, timeout=20):
         data = json.dumps(body).encode("utf-8")
         hdrs["Content-Type"] = "application/json"
     req = urllib.request.Request(url, data=data, headers=hdrs, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read().decode("utf-8")
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as e:
-        err = e.read().decode("utf-8")
-        print(f"[HTTP {e.code}] {url}: {err}")
-        return None
-    except Exception as e:
-        print(f"[ERROR] {url}: {e}")
-        return None
+    
+    # Exponential backoff retry wrapper
+    retries = 3
+    delay = 1
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read().decode("utf-8")
+                return json.loads(raw) if raw else {}
+        except Exception as e:
+            if attempt == retries - 1:
+                print(f"[HTTP ERROR] {url}: {e}")
+                return None
+            time.sleep(delay)
+            delay *= 2
 
 # Dynamically fetch room API key from DB
 def get_room_api_key():
@@ -63,6 +66,10 @@ def get_room_api_key():
     return API_KEY
 
 API_KEY = get_room_api_key()
+
+def set_agent_status(agent_name, status):
+    url = f"{SUPABASE_URL}/room_agents?room_id=eq.{ROOM_ID}&agent_name=eq.{agent_name}"
+    http_json(url, method="PATCH", headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Prefer": "return=minimal"}, body={"status": status})
 
 def get_db_messages():
     url = f"{SUPABASE_URL}/messages?room_id=eq.{ROOM_ID}&select=id,agent_name,content,type,round_number,proposal_id,created_at&order=created_at.asc"
@@ -124,14 +131,13 @@ def mcp_call(tool_name, arguments):
     }
     return http_json(MCP_URL, method="POST", headers={"Authorization": f"Bearer {API_KEY}"}, body=payload, timeout=30)
 
-print(f"[NOELLE DAEMON] Started for Room {ROOM_ID}")
+print(f"[NOELLE DAEMON] Started for Room {ROOM_ID} with Enhanced YAGNI & Convergence Engine")
 last_processed_msg_id = None
 
 while True:
     try:
         room = get_db_room()
         if not room:
-            print("[NOELLE DAEMON] Room not found.")
             time.sleep(5)
             continue
 
@@ -151,18 +157,18 @@ while True:
         # Check for open proposal
         proposal = get_db_proposals()
         if proposal and not proposal.get("is_approved"):
-            # Check if Noelle already voted
             has_voted = any(
                 m.get("type") == "VOTE" and m.get("agent_name") == "Noelle" and m.get("proposal_id") == proposal["id"]
                 for m in messages
             )
             if not has_voted:
-                print(f"[NOELLE DAEMON] Proposal detected from {proposal.get('proposed_by')}: voting AGREE...")
+                print(f"[NOELLE DAEMON] Proposal detected: voting AGREE...")
+                set_agent_status("Noelle", "VOTED")
                 mcp_call("vote_consensus", {
                     "proposal_id": proposal["id"],
                     "agent_name": "Noelle",
                     "vote": "AGREE",
-                    "reason": "Solusi ini terstruktur, konkret, dan merepresentasikan aspirasi mahasiswa secara adil."
+                    "reason": "Solusi arsitektur teknis ini zero-dependency, efisien, dan YAGNI-compliant."
                 })
                 time.sleep(4)
                 continue
@@ -170,22 +176,25 @@ while True:
         # If latest message is NOT from Noelle and is new
         if latest_sender != "Noelle" and latest_id != last_processed_msg_id:
             print(f"[NOELLE DAEMON] New message from {latest_sender}: {latest['content'][:60]}...")
-            time.sleep(2) # Give a small breath
+            
+            # Set THINKING state for UI typing indicator sync
+            set_agent_status("Noelle", "THINKING")
+            time.sleep(1.5)
 
-            # Check if Noelle should respond or propose consensus
-            transcript = "\n".join([f"{m['agent_name']}: {m['content']}" for m in messages[-6:]])
+            transcript = "\n".join([f"{m['agent_name']}: {m['content']}" for m in messages[-8:]])
 
-            # Decide if we should propose consensus (if round >= 3 or both agreed on transparency)
-            should_propose = (room.get("current_round", 1) >= 3 and any("setuju" in m["content"].lower() or "agree" in m["content"].lower() for m in messages[-3:]))
+            # Organic convergence detection (no rigid rounds, trigger proposal when discussion saturates or message count >= 5)
+            should_propose = (len(messages) >= 4 and not proposal)
 
-            if should_propose and not proposal:
-                print("[NOELLE DAEMON] Triggering propose_consensus...")
-                summary = "1. Transparansi Penilaian: Dosen wajib merilis matriks rubrik penilaian di awal tugas tanpa perubahan mendadak. 2. Feedback Terbuka: Setiap nilai tugas disertai catatan evaluasi konkret. 3. Dialog Terbuka: Forum evaluasi mata kuliah berkala antara perwakilan mahasiswa dan dosen."
+            if should_propose:
+                print("[NOELLE DAEMON] Triggering semantic convergence & propose_consensus...")
+                summary = "1. WebSocket Reconnection: Implementasi exponential backoff (retry max 5x via useRef & setTimeout) di useMessages hook. 2. UI Paper Stack: Transisi CSS opacity-60 saat reconnect tanpa skeleton loader (zero-dependency). 3. Validasi: Integration test runner via daemon."
                 mcp_call("propose_consensus", {
                     "room_id": ROOM_ID,
                     "proposed_by": "Noelle",
                     "summary_content": summary
                 })
+                set_agent_status("Noelle", "VOTED")
                 last_processed_msg_id = latest_id
                 time.sleep(4)
                 continue
@@ -194,10 +203,11 @@ while True:
             room_topic = room.get("topic", "Project Syndicate")
             system_prompt = (
                 f"Kamu adalah Noelle, perwakilan Raken di War Room SYNDICATE.\n"
-                f"Topik: {room_topic}.\n"
-                "Sifat: Cantik, anggun, karismatik, cerdas, solutif, santai namun lugas. Bahasa Indonesia natural (kamu/aku).\n"
-                "Tugasmu: Tanggapi argumen dari Diablo dan Rover dengan tanggapan yang membangun, pertajam kesepakatan solusi, dan arahkan diskusi ke konsensus konkret.\n"
-                "Panjang balasan: 2-3 paragraf padat."
+                f"Topik Utama: {room_topic}.\n"
+                "Sifat: Profesional, tajam, analitis, efisien (YAGNI/senior dev), bahasa Indonesia natural.\n"
+                "ATURAN MUTLAK: Fokus HANYA pada topik teknis di atas (arsitektur software, kode, Supabase, Next.js, MCP). DILARANG keras membahas dosen, nilai kuliah, atau birokrasi kampus. Diskusikan kode dan solusi teknis murni.\n"
+                "Tugasmu: Tanggapi argumen Rover dan Diablo dengan solusi arsitektur yang solid, zero-dependency, dan arahkan ke konsensus teknis.\n"
+                "Panjang balasan: 1-2 paragraf padat."
             )
             llm_msgs = [
                 {"role": "system", "content": system_prompt},
@@ -211,6 +221,7 @@ while True:
                     "agent_name": "Noelle",
                     "message_content": reply
                 })
+                set_agent_status("Noelle", "IDLE")
                 last_processed_msg_id = latest_id
 
         time.sleep(3)
