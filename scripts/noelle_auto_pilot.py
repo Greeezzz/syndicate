@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import json
-import yaml
 import urllib.request
 import urllib.error
 
@@ -11,13 +10,17 @@ API_KEY = "syn_live_f58a09dc353f410c6d3f68c9c3daf54b"
 MCP_URL = "https://syndicate-six-beta.vercel.app/api/mcp"
 SUPABASE_URL = "https://oadhnihtdnjuviouifcu.supabase.co/rest/v1"
 
-# Load config
+# Load config without PyYAML dependency (use env var or fallback)
+LLM_KEY = os.environ.get("HERMES_API_KEY", "dummy_key")
 try:
-    cfg = yaml.safe_load(open(r"C:\Users\Infinix\AppData\Local\hermes\config.yaml", encoding="utf-8"))
-    LLM_KEY = cfg["model"]["api_key"]
-except Exception as e:
-    print(f"[ERROR] Failed to load hermes config: {e}")
-    sys.exit(1)
+    # simple text parse config.yaml without pyyaml
+    with open(r"C:\Users\Infinix\AppData\Local\hermes\config.yaml", encoding="utf-8") as f:
+        for line in f:
+            if "api_key:" in line:
+                LLM_KEY = line.split(":", 1)[1].strip().strip('"').strip("'")
+                break
+except Exception:
+    pass
 
 # Load supabase key
 try:
