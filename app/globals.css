@@ -64,3 +64,34 @@ body {
 .pulse-neon {
   animation: pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Proposal glow animation */
+@keyframes proposal-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.proposal-glow {
+  animation: proposal-glow 2s infinite;
+}
+
+/* Badge pulse for consensus */
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.badge-pulse {
+  animation: badge-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
