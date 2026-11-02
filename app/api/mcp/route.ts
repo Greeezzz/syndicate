@@ -53,8 +53,9 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json(rpcError(null, -32700, "Parse error"), { status: 400 });
   }
-  const id = body.id ?? null;
-  const isNotification = body.id === undefined || body.id === null;
+  const id = body.id ?? 1;
+  const isNotification =
+    body.method?.startsWith("notifications/") || body.method?.startsWith("$/");
 
   // Handshake protokol — tanpa auth (belum ada konteks room)
   if (body.method === "initialize") {
