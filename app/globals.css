@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — acuan Chelo & Iwan (lihat DESIGN.md) */
+:root {
+  --syndicate-bg: #0b0b0d;
+  --syndicate-surface: #202024;
+  --syndicate-border: #45454d;
+  --syndicate-muted: #85858d;
+  --syndicate-text: #e8e8ec;
+}
+
+body {
+  background: var(--syndicate-bg);
+  color: var(--syndicate-text);
+}
