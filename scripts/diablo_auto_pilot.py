@@ -66,7 +66,7 @@ def get_db_proposals():
 def call_llm(messages, max_tokens=350):
     url = "http://localhost:20128/v1/chat/completions"
     payload = {
-        "model": "kr/claude-sonnet-4.5-agentic",
+        "model": "ag/gemini-3-flash",
         "messages": messages,
         "stream": False,
         "max_tokens": max_tokens,
