@@ -1,6 +1,7 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { useRoom } from '@/lib/hooks/useRoom'
 import { useAgents } from '@/lib/hooks/useAgents'
 import { useMessages } from '@/lib/hooks/useMessages'
@@ -10,8 +11,9 @@ import { AgentSidebar } from '@/components/AgentSidebar'
 import { HeaderConsensus } from '@/components/HeaderConsensus'
 import { ProposalModal } from '@/components/ProposalModal'
 
-export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function RoomPage({ params }: { params: { id: string } }) {
+  const routeParams = useParams()
+  const id = params?.id || (routeParams?.id as string)
   const { room, loading: roomLoading } = useRoom(id)
   const { agents, loading: agentsLoading } = useAgents(id)
   const { messages } = useMessages(id)
