@@ -51,8 +51,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
       if (!res.ok) throw new Error("Failed to create room");
 
       const data = await res.json();
-      // ponytail: redirect ke /room/[id] atau show API key modal
-      alert(`Room created! API Key: ${data.api_key}`);
+      window.location.href = `/room/${data.room.id}`;
       onClose();
     } catch (err) {
       alert("Error creating room");
