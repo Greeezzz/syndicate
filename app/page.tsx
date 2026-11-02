@@ -1,8 +1,11 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import LiveChatFeed from '@/components/LiveChatFeed'
 
 export default function WarRoomPage() {
+  const searchParams = useSearchParams()
+  const roomId = searchParams.get('room_id') || 'default-room'
   return (
     <main className="min-h-screen bg-[#0B0B0D] flex flex-col">
       {/* HEADER */}
@@ -28,7 +31,7 @@ export default function WarRoomPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* CHAT FEED - Main Area */}
         <div className="flex-1 flex flex-col border-r border-[#45454D]">
-          <LiveChatFeed />
+          <LiveChatFeed roomId={roomId} />
         </div>
 
         {/* SIDEBAR - Agent Monitor */}

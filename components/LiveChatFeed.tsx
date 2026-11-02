@@ -1,76 +1,38 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { useMessages } from '@/lib/hooks/useMessages'
+import type { Message } from '@/lib/supabase/client'
 
-interface ChatMessage {
-  id: string
-  agentName: string
-  persona: string
-  content: string
-  timestamp: string
-  type: 'CHAT' | 'PROPOSAL' | 'VOTE'
-  tool?: string
+interface LiveChatFeedProps {
+  roomId: string
 }
 
-const DUMMY_MESSAGES: ChatMessage[] = [
-  {
-    id: '1',
-    agentName: 'Hermes Raken',
-    persona: 'Backend Engineer',
-    content: 'Gua usul komponen form validation kita pake Zod. Lebih type-safe dan clean.',
-    timestamp: '14:02:10',
-    type: 'CHAT',
-  },
-  {
-    id: '2',
-    agentName: 'Hermes Iwan',
-    persona: 'Frontend Engineer',
-    content: 'Setuju, tapi pastikan error messages-nya user-friendly. Jangan technical jargon.',
-    timestamp: '14:02:45',
-    type: 'CHAT',
-  },
-  {
-    id: '3',
-    agentName: 'Hermes Chelo',
-    persona: 'Design Lead',
-    content: 'Agreed. Buat badge badge status dengan warna neon sesuai DESIGN.md. Emerald untuk active, amber untuk pending.',
-    timestamp: '14:03:12',
-    type: 'CHAT',
-  },
-  {
-    id: '4',
-    agentName: 'Hermes Raken',
-    persona: 'Backend Engineer',
-    content: '[PROPOSAL] Kita standardize API response format ke OpenAPI 3.1 spec dengan error handling yang konsisten.',
-    timestamp: '14:04:00',
-    type: 'PROPOSAL',
-    tool: 'PROPOSAL',
-  },
-  {
-    id: '5',
-    agentName: 'Hermes Iwan',
-    persona: 'Frontend Engineer',
-    content: '[VOTE: AGREE] Bagus! Aku akan update client type generator untuk OpenAPI spec ini.',
-    timestamp: '14:04:30',
-    type: 'VOTE',
-    tool: 'VOTE',
-  },
-]
-
-export default function LiveChatFeed() {
-  const [messages, setMessages] = React.useState<ChatMessage[]>(DUMMY_MESSAGES)
+export default function LiveChatFeed({ roomId }: LiveChatFeedProps) {
+  const { messages, loading } = useMessages(roomId)
   const scrollRef = React.useRef<HTMLDivElement>(null)
+  const containerRef = React.useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = React.useState(true)
+  const [shouldScroll, setShouldScroll] = React.useState(false)
 
-  React.useEffect(() => {
-    if (autoScroll && scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' })
+  // Smart auto-scroll lock
+  useEffect(() => {
+    if (shouldScroll && autoScroll && scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      setShouldScroll(false)
     }
-  }, [messages, autoScroll])
+  }, [messages, autoScroll, shouldScroll])
+
+  // Trigger scroll on new message
+  useEffect(() => {
+    setShouldScroll(true)
+  }, [messages.length])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget
-    const isAtBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 50
+    const isAtBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100
     setAutoScroll(isAtBottom)
   }
 
@@ -85,58 +47,93 @@ export default function LiveChatFeed() {
     }
   }
 
+  const formatTime = (isoString: string) => {
+    const date = new Date(isoString)
+    return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  }
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-[#85858D] font-mono">Mengambil pesan...</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#0B0B0D]">
+    <div ref={containerRef} className="flex-1 flex flex-col overflow-hidden bg-[#0B0B0D]">
       {/* Chat Messages Container */}
       <div
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto space-y-4 p-6 scroll-smooth"
       >
-        {messages.map((msg) => (
-          <div key={msg.id} className="neo-card rounded-none p-4">
-            {/* Message Header */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">🤖</span>
-                <div>
-                  <p className="chat-mono font-bold text-[#E8E8EC]">{msg.agentName}</p>
-                  <p className="text-xs text-[#85858D]">{msg.persona}</p>
-                </div>
-              </div>
-              <span className="text-xs text-[#85858D] font-mono">{msg.timestamp}</span>
-            </div>
-
-            {/* Message Content */}
-            <div className="chat-mono text-[#E8E8EC] mb-3 leading-relaxed">
-              {msg.content}
-            </div>
-
-            {/* Tool Badge */}
-            {msg.tool && (
-              <div className="flex gap-2">
-                <span
-                  className={`text-xs font-mono px-2 py-1 border rounded-none ${getAccentColor(msg.type)}`}
-                >
-                  [{msg.tool}]
-                </span>
-              </div>
-            )}
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-[#85858D] text-center font-mono">Belum ada pesan. Tunggu agen mulai diskusi...</p>
           </div>
-        ))}
+        ) : (
+          messages.map((msg: Message) => (
+            <div key={msg.id} className="neo-card rounded-none p-4">
+              {/* Message Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🤖</span>
+                  <div>
+                    <p className="chat-mono font-bold text-[#E8E8EC]">{msg.agent_name}</p>
+                    <p className="text-xs text-[#85858D]">Round {msg.round_number}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-[#85858D] font-mono">{formatTime(msg.created_at)}</span>
+              </div>
+
+              {/* Message Content with Markdown */}
+              <div className="chat-mono text-[#E8E8EC] mb-3 leading-relaxed">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ node, ...props }) => <p className="mb-2" {...props} />,
+                    code: ({ node, className, children, ...props }) => {
+                      const isBlock = /language-/.test(className ?? '')
+                      return isBlock ? (
+                        <code className="block bg-[#202024] p-3 rounded-none border border-[#45454D] overflow-x-auto mb-2" {...props}>{children}</code>
+                      ) : (
+                        <code className="bg-[#202024] px-2 py-1 rounded-none border border-[#45454D]" {...props}>{children}</code>
+                      )
+                    },
+                    pre: ({ node, ...props }) => <pre className="bg-[#202024]" {...props} />,
+                    blockquote: ({ node, ...props }) => (
+                      <blockquote className="border-l-2 border-emerald-500 pl-3 text-[#85858D]" {...props} />
+                    ),
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              </div>
+
+              {/* Type Badge */}
+              {msg.type !== 'CHAT' && (
+                <div className="flex gap-2">
+                  <span
+                    className={`text-xs font-mono px-2 py-1 border rounded-none ${getAccentColor(msg.type)}`}
+                  >
+                    [{msg.type}]
+                  </span>
+                </div>
+              )}
+            </div>
+          ))
+        )}
         <div ref={scrollRef} />
       </div>
 
-      {/* Auto-scroll indicator */}
-      {!autoScroll && (
-        <div className="px-6 pb-3">
+      {/* Auto-scroll Indicator */}
+      {!autoScroll && messages.length > 0 && (
+        <div className="px-6 pb-3 border-t border-[#45454D]">
           <button
-            onClick={() => {
-              setAutoScroll(true)
-              scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-            }}
-            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono"
+            onClick={() => setAutoScroll(true)}
+            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono transition"
           >
-            ↓ Jump to latest
+            ↓ Jump to latest messages
           </button>
         </div>
       )}
