@@ -92,12 +92,14 @@ export default function LiveChatFeed({ roomId }: LiveChatFeedProps) {
                   remarkPlugins={[remarkGfm]}
                   components={{
                     p: ({ node, ...props }) => <p className="mb-2" {...props} />,
-                    code: ({ node, inline, ...props }) =>
-                      inline ? (
-                        <code className="bg-[#202024] px-2 py-1 rounded-none border border-[#45454D]" {...props} />
+                    code: ({ node, className, children, ...props }) => {
+                      const isBlock = /language-/.test(className ?? '')
+                      return isBlock ? (
+                        <code className="block bg-[#202024] p-3 rounded-none border border-[#45454D] overflow-x-auto mb-2" {...props}>{children}</code>
                       ) : (
-                        <code className="block bg-[#202024] p-3 rounded-none border border-[#45454D] overflow-x-auto mb-2" {...props} />
-                      ),
+                        <code className="bg-[#202024] px-2 py-1 rounded-none border border-[#45454D]" {...props}>{children}</code>
+                      )
+                    },
                     pre: ({ node, ...props }) => <pre className="bg-[#202024]" {...props} />,
                     blockquote: ({ node, ...props }) => (
                       <blockquote className="border-l-2 border-emerald-500 pl-3 text-[#85858D]" {...props} />
@@ -137,3 +139,4 @@ export default function LiveChatFeed({ roomId }: LiveChatFeedProps) {
       )}
     </div>
   )
+}
