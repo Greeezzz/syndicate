@@ -44,11 +44,14 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
         body: JSON.stringify({
           topic,
           max_rounds: parseInt(maxRounds),
-          agents: agents.filter((a) => a.name && a.persona),
+          agents: agents.filter((a) => a.name && a.persona).map((a) => ({ agent_name: a.name, persona: a.persona })),
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create room");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create room");
+      }
 
       const data = await res.json();
       window.location.href = `/room/${data.room.id}`;
