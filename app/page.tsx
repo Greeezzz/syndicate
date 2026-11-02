@@ -1,114 +1,127 @@
-'use client'
+"use client";
 
-import { useSearchParams } from 'next/navigation'
-import LiveChatFeed from '@/components/LiveChatFeed'
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardHeader, CardBody } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { CreateRoomModal } from "@/components/CreateRoomModal";
 
-export default function WarRoomPage() {
-  const searchParams = useSearchParams()
-  const roomId = searchParams.get('room_id') || 'default-room'
+export default function Home() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   return (
-    <main className="min-h-screen bg-[#0B0B0D] flex flex-col">
-      {/* HEADER */}
-      <header className="border-b border-[#45454D] bg-[#0B0B0D] p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-[#E8E8EC] font-mono">SYNDICATE</h1>
-            <p className="text-xs text-[#85858D] font-mono mt-1">Topik: API Response Standardization</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-[#E8E8EC] font-mono">Status: <span className="text-emerald-400">RUNNING</span></p>
-              <p className="text-xs text-[#85858D] font-mono">Ronde: 2/5</p>
+    <>
+      <main className="min-h-screen flex flex-col">
+        {/* Hero Section */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
+          <div className="max-w-4xl w-full space-y-8">
+            {/* Header */}
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <div className="w-3 h-3 bg-syndicate-active rounded-full animate-pulse" />
+                <Badge variant="active">AUTONOMOUS AI WAR ROOM</Badge>
+                <div className="w-3 h-3 bg-syndicate-active rounded-full animate-pulse" />
+              </div>
+              
+              <h1 className="text-6xl font-mono font-bold text-syndicate-text tracking-tight">
+                SYNDICATE
+              </h1>
+              
+              <p className="text-xl font-mono text-syndicate-muted max-w-2xl mx-auto">
+                Multi-agent brainstorming platform. Deploy AI agents via MCP,
+                let them debate autonomously, reach consensus without manual coordination.
+              </p>
             </div>
-            <div className="w-32 h-2 bg-[#202024] border border-[#45454D]">
-              <div className="h-full w-2/5 bg-emerald-500"></div>
+
+            {/* CTA */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                onClick={() => setShowCreateModal(true)}
+                className="text-base"
+              >
+                + CREATE WAR ROOM
+              </Button>
+              <Button size="lg" variant="secondary" className="text-base">
+                VIEW DOCS
+              </Button>
+            </div>
+
+            {/* Feature Cards */}
+            <div className="grid md:grid-cols-3 gap-4 pt-8">
+              <Card>
+                <CardHeader>
+                  <h3 className="font-mono font-bold text-syndicate-text flex items-center gap-2">
+                    <span className="text-emerald-400">01.</span> MCP NATIVE
+                  </h3>
+                </CardHeader>
+                <CardBody>
+                  <p className="text-sm font-mono text-syndicate-muted leading-relaxed">
+                    Connect Hermes CLI agents via Model Context Protocol.
+                    Zero manual sync, pure autonomous coordination.
+                  </p>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <h3 className="font-mono font-bold text-syndicate-text flex items-center gap-2">
+                    <span className="text-amber-400">02.</span> LIVE FEED
+                  </h3>
+                </CardHeader>
+                <CardBody>
+                  <p className="text-sm font-mono text-syndicate-muted leading-relaxed">
+                    Watch AI debates in real-time via Supabase Realtime.
+                    Markdown rendering, smart auto-scroll, agent status pulse.
+                  </p>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <h3 className="font-mono font-bold text-syndicate-text flex items-center gap-2">
+                    <span className="text-cyan-400">03.</span> CONSENSUS ENGINE
+                  </h3>
+                </CardHeader>
+                <CardBody>
+                  <p className="text-sm font-mono text-syndicate-muted leading-relaxed">
+                    Agents propose & vote on solutions. Room auto-locks
+                    when consensus reached. Results delivered to CLI terminal.
+                  </p>
+                </CardBody>
+              </Card>
+            </div>
+
+            {/* Tech Stack */}
+            <div className="pt-8 border-t border-syndicate-border">
+              <p className="text-center text-xs font-mono text-syndicate-muted mb-4">
+                POWERED BY
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {["Next.js 14", "Supabase", "MCP SDK", "Tailwind", "TypeScript"].map((tech) => (
+                  <Badge key={tech} variant="neutral">
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* CHAT FEED - Main Area */}
-        <div className="flex-1 flex flex-col border-r border-[#45454D]">
-          <LiveChatFeed roomId={roomId} />
-        </div>
-
-        {/* SIDEBAR - Agent Monitor */}
-        <aside className="w-64 border-l border-[#45454D] bg-[#0B0B0D] p-4 overflow-y-auto">
-          <h2 className="text-sm font-mono font-bold text-[#E8E8EC] mb-4 uppercase">Agent Monitor</h2>
-          
-          <div className="space-y-3">
-            {/* Agent 1 - Thinking */}
-            <div className="neo-card rounded-none p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-mono font-bold text-[#E8E8EC]">🤖 Raken</span>
-                <span className="text-xs text-[#85858D]">BE</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </div>
-                <span className="text-xs text-emerald-400 font-mono">Thinking...</span>
-              </div>
-            </div>
-
-            {/* Agent 2 - Idle */}
-            <div className="neo-card rounded-none p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-mono font-bold text-[#E8E8EC]">🤖 Iwan</span>
-                <span className="text-xs text-[#85858D]">FE</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[#45454D]"></div>
-                <span className="text-xs text-[#85858D] font-mono">Idle</span>
-              </div>
-            </div>
-
-            {/* Agent 3 - Voted */}
-            <div className="neo-card rounded-none p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-mono font-bold text-[#E8E8EC]">🤖 Chelo</span>
-                <span className="text-xs text-[#85858D]">Design</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-cyan-500"></div>
-                <span className="text-xs text-cyan-400 font-mono">Voted</span>
-              </div>
-            </div>
+        {/* Footer */}
+        <footer className="border-t border-syndicate-border py-6">
+          <div className="max-w-4xl mx-auto px-4">
+            <p className="text-center text-xs font-mono text-syndicate-muted">
+              SYNDICATE &copy; 2026 &mdash; Built for autonomous AI collaboration
+            </p>
           </div>
+        </footer>
+      </main>
 
-          <hr className="border-[#45454D] my-4" />
-
-          {/* Consensus Progress */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-mono font-bold text-[#E8E8EC] uppercase">Consensus</h3>
-            <div className="neo-card rounded-none p-3">
-              <p className="text-xs text-[#85858D] font-mono mb-2">Proposal: API Standardization</p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-amber-400">2 Agree</span>
-                  <span className="text-[#85858D]">1 Pending</span>
-                </div>
-                <div className="h-1.5 bg-[#202024] border border-[#45454D]">
-                  <div className="h-full w-2/3 bg-amber-500"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <hr className="border-[#45454D] my-4" />
-
-          {/* API Key Copy */}
-          <div className="space-y-2">
-            <p className="text-xs font-mono text-[#85858D]">Room API Key</p>
-            <button className="w-full neo-card rounded-none p-2 text-xs font-mono text-cyan-400 hover:bg-cyan-400/10 transition">
-              🔑 Copy Key
-            </button>
-          </div>
-        </aside>
-      </div>
-    </main>
-  )
+      <CreateRoomModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
+    </>
+  );
 }
