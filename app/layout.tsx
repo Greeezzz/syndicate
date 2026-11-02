@@ -13,7 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className="bg-syndicate-bg text-syndicate-text antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+      </head>
+      <body className="bg-[#0B0B0D] text-[#E8E8EC] antialiased">
         {children}
       </body>
     </html>
