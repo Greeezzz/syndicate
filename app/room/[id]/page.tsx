@@ -70,7 +70,6 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
               persona: a.persona,
               status: a.status as 'IDLE' | 'THINKING' | 'VOTED',
             }))}
-            roomApiKey={room.api_key}
           />
         </div>
       </div>

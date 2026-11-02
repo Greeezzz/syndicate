@@ -18,7 +18,6 @@ CREATE TYPE msg_type AS ENUM ('CHAT', 'PROPOSAL', 'VOTE');
 CREATE TABLE rooms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   topic TEXT NOT NULL,
-  api_key TEXT UNIQUE NOT NULL,
   status room_status DEFAULT 'IDLE',
   max_rounds INT DEFAULT 5,
   current_round INT DEFAULT 1,
@@ -33,6 +32,14 @@ CREATE TABLE room_agents (
   status TEXT DEFAULT 'IDLE', -- IDLE | THINKING | VOTED (FR-04)
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (room_id, agent_name)
+);
+
+-- API key dipisah dari rooms: rooms dibaca publik via RLS (anon),
+-- key tidak boleh terekspos ke anon/realtime (NFR-02).
+CREATE TABLE room_secrets (
+  room_id UUID PRIMARY KEY REFERENCES rooms(id) ON DELETE CASCADE,
+  api_key TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE consensus_proposals (
@@ -71,6 +78,8 @@ ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE room_agents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consensus_proposals ENABLE ROW LEVEL SECURITY;
+-- room_secrets: RLS aktif TANPA policy = tolak semua akses non-service-role
+ALTER TABLE room_secrets ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "public read rooms" ON rooms FOR SELECT USING (true);
 CREATE POLICY "public read agents" ON room_agents FOR SELECT USING (true);

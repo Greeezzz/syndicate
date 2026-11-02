@@ -18,7 +18,6 @@ export type Message = {
 export type Room = {
   id: string
   topic: string
-  api_key: string
   status: 'IDLE' | 'RUNNING' | 'COMPLETED'
   max_rounds: number
   current_round: number
