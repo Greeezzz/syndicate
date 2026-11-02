@@ -17,6 +17,23 @@ export default function LiveChatFeed({ roomId }: LiveChatFeedProps) {
   const [autoScroll, setAutoScroll] = React.useState(true)
   const [shouldScroll, setShouldScroll] = React.useState(false)
 
+  // Calculate voting progress
+  const votingStats = React.useMemo(() => {
+    const votes = messages.filter((m) => m.type === 'VOTE')
+    const proposals = messages.filter((m) => m.type === 'PROPOSAL')
+    const agrees = votes.filter((v) => v.content.includes('AGREE')).length
+    const disagrees = votes.filter((v) => v.content.includes('DISAGREE')).length
+    
+    return {
+      hasProposal: proposals.length > 0,
+      lastProposal: proposals[proposals.length - 1] || null,
+      agrees,
+      disagrees,
+      total: votes.length,
+      consensus: agrees > 0 && disagrees === 0 ? 'AGREE' : disagrees > 0 && agrees === 0 ? 'DISAGREE' : null,
+    }
+  }, [messages])
+
   // Smart auto-scroll lock
   useEffect(() => {
     if (shouldScroll && autoScroll && scrollRef.current) {
@@ -110,12 +127,26 @@ export default function LiveChatFeed({ roomId }: LiveChatFeedProps) {
                 </ReactMarkdown>
               </div>
 
-              {/* Type Badge */}
-              {msg.type !== 'CHAT' && (
+              {/* Type Badge with Animations */}
+              {msg.type === 'PROPOSAL' && (
+                <div className="flex gap-2 mb-3">
+                  <span className="text-xs font-mono px-3 py-2 border border-amber-500/60 rounded-none bg-amber-500/10 text-amber-400 proposal-glow">
+                    ⚠️ [PROPOSAL]
+                  </span>
+                </div>
+              )}
+              
+              {msg.type === 'VOTE' && (
+                <div className="flex gap-2 items-center">
+                  <span className={`text-xs font-mono px-3 py-2 border rounded-none badge-pulse ${msg.content.includes('AGREE') ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-400' : 'border-red-500/60 bg-red-500/10 text-red-400'}`}>
+                    {msg.content.includes('AGREE') ? '✓ [VOTE: AGREE]' : '✗ [VOTE: DISAGREE]'}
+                  </span>
+                </div>
+              )}
+              
+              {msg.type !== 'CHAT' && msg.type !== 'PROPOSAL' && msg.type !== 'VOTE' && (
                 <div className="flex gap-2">
-                  <span
-                    className={`text-xs font-mono px-2 py-1 border rounded-none ${getAccentColor(msg.type)}`}
-                  >
+                  <span className={`text-xs font-mono px-2 py-1 border rounded-none ${getAccentColor(msg.type)}`}>
                     [{msg.type}]
                   </span>
                 </div>
@@ -125,6 +156,37 @@ export default function LiveChatFeed({ roomId }: LiveChatFeedProps) {
         )}
         <div ref={scrollRef} />
       </div>
+
+      {/* Voting Progress Indicator */}
+      {votingStats.hasProposal && votingStats.total > 0 && (
+        <div className="px-6 py-4 border-t border-[#45454D] bg-[#0B0B0D]/50">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono text-[#85858D] uppercase">Consensus Voting</span>
+              {votingStats.consensus && (
+                <span className={`text-xs font-mono px-2 py-1 rounded-none ${votingStats.consensus === 'AGREE' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {votingStats.consensus === 'AGREE' ? '✓ KESEPAKATAN' : '✗ PENOLAKAN'}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-[#202024] border border-[#45454D] rounded-none overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-300"
+                  style={{ width: `${(votingStats.agrees / Math.max(votingStats.total, 1)) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-mono text-emerald-400">{votingStats.agrees}/{votingStats.total}</span>
+            </div>
+            
+            <div className="text-xs font-mono text-[#85858D] grid grid-cols-2 gap-2">
+              <div>✓ Setuju: <span className="text-emerald-400">{votingStats.agrees}</span></div>
+              <div>✗ Tidak: <span className="text-red-400">{votingStats.disagrees}</span></div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Auto-scroll Indicator */}
       {!autoScroll && messages.length > 0 && (
