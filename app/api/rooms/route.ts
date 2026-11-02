@@ -47,9 +47,11 @@ export async function POST(req: NextRequest) {
   const api_key = `syn_live_${randomBytes(16).toString("hex")}`; // syn_live_ + 32 hex
   const supabase = getServiceClient();
 
+  // api_key disimpan terpisah (room_secrets, tanpa akses anon) —
+  // rooms terekspos ke anon via RLS read-only (NFR-02).
   const { data: room, error: roomErr } = await supabase
     .from("rooms")
-    .insert({ topic, api_key, max_rounds: maxRounds })
+    .insert({ topic, max_rounds: maxRounds })
     .select("id, topic, status, max_rounds, current_round, created_at")
     .single();
   if (roomErr || !room) {
@@ -69,6 +71,17 @@ export async function POST(req: NextRequest) {
   if (agentsErr) {
     return NextResponse.json(
       { error: `Room dibuat tapi gagal daftar agen: ${agentsErr.message}` },
+      { status: 500 }
+    );
+  }
+
+  const { error: secretErr } = await supabase
+    .from("room_secrets")
+    .insert({ room_id: room.id, api_key });
+  if (secretErr) {
+    await supabase.from("rooms").delete().eq("id", room.id);
+    return NextResponse.json(
+      { error: `Gagal menyimpan API key: ${secretErr.message}` },
       { status: 500 }
     );
   }

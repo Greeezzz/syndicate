@@ -11,12 +11,14 @@ export async function authenticateRoom(req: Request): Promise<Room | null> {
   if (!match) return null;
 
   const supabase = getServiceClient();
+  // api_key tinggal di room_secrets (bukan rooms) — kolom rooms tanpa key
+  // supaya anon/realtime tidak bisa membacanya (NFR-02).
   const { data, error } = await supabase
-    .from("rooms")
-    .select("*")
+    .from("room_secrets")
+    .select("room:rooms(*)")
     .eq("api_key", match[1])
     .single();
 
-  if (error || !data) return null;
-  return data as Room;
+  if (error || !data?.room) return null;
+  return data.room as unknown as Room;
 }
