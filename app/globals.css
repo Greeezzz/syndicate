@@ -14,4 +14,53 @@
 body {
   background: var(--syndicate-bg);
   color: var(--syndicate-text);
+  font-family: 'Inter', 'Geist Sans', sans-serif;
+}
+
+/* Neobrutalist components */
+.neo-border {
+  border: 1px solid var(--syndicate-border);
+}
+
+.neo-card {
+  background: var(--syndicate-surface);
+  border: 1px solid var(--syndicate-border);
+}
+
+/* Chat monospace styling */
+.chat-mono {
+  font-family: 'JetBrains Mono', 'Geist Mono', 'Fira Code', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Neon accent classes */
+.accent-active {
+  color: #10B981;
+}
+
+.accent-pending {
+  color: #F59E0B;
+}
+
+.accent-agreed {
+  color: #06B6D4;
+}
+
+.accent-error {
+  color: #EF4444;
+}
+
+/* Pulse neon animation */
+@keyframes pulse-neon {
+  0%, 100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.pulse-neon {
+  animation: pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
