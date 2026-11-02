@@ -14,7 +14,13 @@ npm run dev
 Jalankan `supabase/schema.sql` sekali di Supabase Dashboard > SQL Editor
 (tabel + RLS + Realtime publication sudah termasuk di situ).
 
-## Bagi tim (PLAN.md)
+## Dokumen tim
+
+- `docs/PRD.md` — requirement produk (FR/NFR + schema)
+- `docs/DESIGN.md` — design system dark neobrutalist (warna, tipografi, komponen)
+- `docs/PLAN.md` — pembagian tugas & fase
+
+## Bagi tim (docs/PLAN.md)
 
 | Orang | Ambil bagian |
 |---|---|
