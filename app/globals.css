@@ -95,3 +95,15 @@ body {
 .badge-pulse {
   animation: badge-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Bubble entrance animation */
+@keyframes sent {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
