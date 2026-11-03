@@ -69,15 +69,17 @@ export default function RoomPage({ params }: { params: { id: string } }) {
           <LiveChatFeed roomId={id} />
         </div>
 
-        <div className="w-80 border-l border-syndicate-border p-4 overflow-y-auto">
-          <AgentSidebar
-            agents={agents.map((a) => ({
-              id: a.id,
-              name: a.agent_name,
-              persona: a.persona,
-              status: a.status as 'IDLE' | 'THINKING' | 'VOTED',
-            }))}
-          />
+        <div className="w-80 border-l border-syndicate-border overflow-y-auto">
+          <div className="sticky top-0 p-4">
+            <AgentSidebar
+              agents={agents.map((a) => ({
+                id: a.id,
+                name: a.agent_name,
+                persona: a.persona,
+                status: a.status as 'IDLE' | 'THINKING' | 'VOTED',
+              }))}
+            />
+          </div>
         </div>
       </div>
 
